@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */ 
+function content_statistics_schema() {
+  $schema['content_statistics'] = array(
+    'description' => 'To store the values of a node',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'descripiton' => 'The primary key',
+      ),
+      'letter' => array(
+        'type' => 'int',
+        'length' => 30,
+        'not null' => FALSE,
+        'description' => 'Number of letters',
+      ),
+      'word' => array(
+        'type' => 'int',
+        'length' => 30,
+        'not null' => FALSE,
+        'description' => 'Number of words',
+      ),
+      'sentence' => array(
+        'type' => 'int',
+        'length' => 30,
+        'not null' => FALSE,
+        'description' => 'Number of sentences',
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'length' => 30,
+        'not null' => TRUE,
+        'description' => 'The node id connected',
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  return $schema;
+}

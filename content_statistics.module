@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * @file
+ * Include the hooks.
+ */ 
+
+use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\content_statistics\Controller\ContentStatisticsCount;
+use Drupal\Component\Utility\Html;
+
+/**
+ * Implements hook_node_insert().
+ */ 
+function content_statistics_node_insert($node) {
+  $type = $node->bundle();
+  $statistics = new ContentStatisticsCount;
+  if ($statistics->contentStatisticsCheckType($type)) {
+    $nid = $node->get('nid')->value;
+    $body_value = $node->get('body')->value;
+    $counts = $statistics->contentStatisticsCountInsert($nid, $body_value);
+  }
+  return $counts;
+  
+}
+
+/**
+ * Implements hook_node_update().
+ */ 
+function content_statistics_node_update($node) {
+  $type = $node->bundle();
+  $statistics = new ContentStatisticsCount;
+  if ($statistics->contentStatisticsCheckType($type)) {
+    $nid = $node->get('nid')->value;
+    $body_value = strip_tags($node->get('body')->value);
+    $counts = $statistics->contentStatisticsCountUpdate($nid, $body_value);
+  }
+  return $counts;
+}
+
+/**
+ * Implements hook_node_delete().
+ */ 
+function content_statistics_node_delete($node) {
+  $nid = $node->get('nid')->value;
+  $statistics = new ContentStatisticsCount;
+  $count = $statistics->contentStatisticsCountDelete($nid);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */ 
+function content_statistics_node_view(array &$build, $node, $display, $view_mode) {
+  $access = \Drupal::currentUser()->hasPermission('access statistics');
+  $nid = $node->id();
+  $type = $node->bundle();
+  $statistics = new ContentStatisticsCount;
+  $types_selected = \Drupal::config('content_statistics.settings')->get('content_statistics.content_types');
+  if ($access && !empty($types_selected[$type])) {
+    $node_count = \Drupal::database()
+      ->select('content_statistics', 'content_statistics')
+      ->fields('content_statistics')
+      ->condition('content_statistics.nid', $nid)
+      ->execute()
+      ->fetchAll();
+    if (empty($node_count)) {
+	  $body_value = $node->get('body')->value;
+	  $node_count = $statistics->contentStatisticsCountInsert($nid, $body_value);
+	}
+	
+	foreach ($node_count as $key => $value) {
+	  $node_statistics = array(
+		'#letter' => $value->letter,
+		'#word' => $value->word,
+		'#sentence' => $value->sentence,
+	  );
+	}
+	if ($view_mode != 'teaser') {
+	  $build['content_statistics_list'] = array(
+		'#theme' => 'content_statistics_list',
+		'#items' => $node_statistics,
+		'#weight' => 3,
+		'#attached' => array(
+		  'library' => array('content_statistics/content_statistics')
+		),
+	  );
+	}
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function content_statistics_theme($existing, $type, $theme, $path) {
+   return array(
+    'content_statistics_list' => array(
+      'variables' => array('items' => array()),
+      'function' => 'theme_content_statistics_list',
+    ),
+  );
+}
+
+function theme_content_statistics_list(&$variables) {
+  $output = '<div id="box">';
+  $output .= '<div>Content Statistics</div>';
+  $output .= '<div>Characters:' . $variables['items']['#letter'] . '</div>';
+  $output .= '<div>Words: ' . $variables['items']['#word'] . '</div>';
+  $output .= '<div>Sentences: ' . $variables['items']['#sentence'] . '</div>';
+  $output .= '</div>';
+  return $output;
+}

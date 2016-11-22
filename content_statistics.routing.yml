@@ -1,0 +1,8 @@
+content_statistics.admin_settings:
+  path: '/admin/config/content_statistics'
+  defaults:
+    _form: '\Drupal\content_statistics\Form\ContentStatisticsForm'
+    _title: 'Select content types'
+  requirements:
+    _permission: 'access content'
+

@@ -1,0 +1,5 @@
+content_statistics:
+  version: 0
+  css:
+    theme:
+      styles/content_statistics.css: {}

@@ -1,0 +1,6 @@
+#box {
+  height: 100px;
+  width: 150px;
+  border: 2px solid black;
+  padding-left: 20px;
+}
